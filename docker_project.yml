@@ -113,7 +113,7 @@
   become: true
   vars:
     container_name: tarik_nodejs
-    image_name: 046402772087.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:nodejs
+    image_name: 150257709090.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:nodejs
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
