@@ -28,9 +28,9 @@ resource "aws_instance" "managed_nodes" {
   ami = "ami-05a5f6298acdb05b6"
   count = 3
   instance_type = "t2.micro"
-  key_name = "key_name"  # change with your pem file
+  key_name = "key_name" 
   vpc_security_group_ids = [aws_security_group.tf-sec-gr.id]
-  iam_instance_profile = "jenkins-project-profile-${var.user}" # we created this with jenkins server
+  iam_instance_profile = "jenkins-project-profile-${var.user}" # I created this with jenkins server
   tags = {
     Name = "ansible_${element(var.tags, count.index )}"
     stack = "ansible_project"
