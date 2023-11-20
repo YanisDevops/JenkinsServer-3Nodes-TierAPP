@@ -106,24 +106,24 @@ In the architecture, you can configure your architecture with these conditions,
 ```bash
 208:clarusway_jenkins_project (folder)
 |
-|----Readme.md                  # Given to the students (Definition of the project)
-|----dockerfile-postgresql      # Given to the students
-|----dockerfile-nodejs          # Given to the students
-|----dockerfile-react           # Given to the students
-|----main.tf                    # To be delivered by students (for managed nodes)
-|----Jenkinsfile                # To be delivered by students
-|----Ansible-Playbook           # To be delivered by students
-|----student_files (folder)     # Given to the students (Postgresql, Nodejs and React files)
+|----Readme.md                  # Given to the team (Definition of the project)
+|----dockerfile-postgresql      # Given to the team
+|----dockerfile-nodejs          # Given to the team
+|----dockerfile-react           # Given to the team
+|----main.tf                    # To be delivered by team (for managed nodes)
+|----Jenkinsfile                # To be delivered by team
+|----Ansible-Playbook           # To be delivered by team
+|----required_files (folder)     # Given to the team (Postgresql, Nodejs and React files)
 |       1.server (folder) ---> Nodejs folders and files
 |       2.client (folder) ---> React folders and files
 |       3.database (folder)--> init.sql file 
-|----ansible.cfg                # Given to the students
-|----inventory_aws_ec2.yml      # Given to the students
-|----install-jenkins.tf         # Given to the students (Terraform template for Jenkins Server)
-|----variables.tf               # Given to the students (Terraform template for Jenkins Server)
-|----jenkins.sh                 # Given to the students (Terraform template for Jenkins Server)
-|----node-env-template          # Given to the students (env template to take prostgresql node private ip)
-|----react-env-template         # Given to the students (env template to take nodejs node private ip)
+|----ansible.cfg                # Given to the team
+|----inventory_aws_ec2.yml      # Given to the team
+|----install-jenkins.tf         # Given to the team (Terraform template for Jenkins Server)
+|----variables.tf               # Given to the team (Terraform template for Jenkins Server)
+|----jenkins.sh                 # Given to the team (Terraform template for Jenkins Server)
+|----node-env-template          # Given to the team (env template to take prostgresql node private ip)
+|----react-env-template         # Given to the team (env template to take nodejs node private ip)
 
 ```
 
@@ -159,7 +159,7 @@ In the architecture, you can configure your architecture with these conditions,
 
 - Git & Github for Version Control System
 
-### At the end of the project, students will be able to;
+### At the end of the project, team will be able to;
 
 - demonstrate how to configure Jenkins pipeline to create infrstructure with terraform.
 
