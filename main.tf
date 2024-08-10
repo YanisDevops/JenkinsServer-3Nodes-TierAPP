@@ -66,8 +66,10 @@ resource "aws_iam_policy" "jenkins_project_policy" {
           "ecr:GetRepositoryPolicy",
           "ecr:SetRepositoryPolicy",
           "ecr:DeleteRepository",
-          "ecr:DeleteRepositoryPolicy"
-        ]
+          "ecr:DeleteRepositoryPolicy",
+          "ecr:GetAuthorizationToken",
+          "ecr:ListRepositories"    
+        ],
         Resource = "*"
       },
     ]
