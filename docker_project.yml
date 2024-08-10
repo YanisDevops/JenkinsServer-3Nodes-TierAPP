@@ -3,7 +3,7 @@
   become: true
   vars:
     aws_region: us-east-1
-    ecr_registry: XXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com
+    ecr_registry: 590183937685.dkr.ecr.us-east-1.amazonaws.com
   tasks:
     - name: update all packages
       ansible.builtin.yum:
@@ -82,8 +82,8 @@
   hosts: _ansible_postgresql
   become: true
   vars:
-    container_name: tarik_postgre
-    image_name: XXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:postgre
+    container_name: yanis_postgre
+    image_name: 590183937685.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:postgre
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
@@ -112,8 +112,8 @@
   hosts: _ansible_nodejs
   become: true
   vars:
-    container_name: tarik_nodejs
-    image_name: XXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:nodejs
+    container_name: yanis_nodejs
+    image_name: 590183937685.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:nodejs
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
@@ -138,8 +138,8 @@
   hosts: _ansible_react
   become: true
   vars:
-    container_name: tarik_react
-    image_name: XXXXXXXXXXX.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:react
+    container_name: yanis_react
+    image_name: 590183937685.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:react
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
