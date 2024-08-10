@@ -127,7 +127,7 @@ resource "aws_instance" "managed_nodes" {
   ami                    = "ami-0583d8c7a9c35822c"
   count                  = 3
   instance_type          = "t2.micro"
-  key_name               = "Projects_key-1.pem"
+  key_name               = "Projects_key-1"
   vpc_security_group_ids = [aws_security_group.tf-sec-gr.id]
   iam_instance_profile   = aws_iam_instance_profile.jenkins_project_instance_profile.name
   tags = {
