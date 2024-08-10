@@ -53,7 +53,20 @@ resource "aws_iam_policy" "jenkins_project_policy" {
           "s3:ListBucket",
           "s3:GetObject",
           "s3:PutObject",
-          "ec2:DescribeInstances"
+          "ec2:DescribeInstances",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:ListImages",
+          "ecr:DescribeRepositories",
+          "ecr:GetRepositoryPolicy",
+          "ecr:SetRepositoryPolicy",
+          "ecr:DeleteRepository",
+          "ecr:DeleteRepositoryPolicy"
         ]
         Resource = "*"
       },
