@@ -78,6 +78,10 @@ app.delete("/todos/:id", async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the Todo API!');
+});
+
 app.listen(process.env.SERVER_PORT, () => {
   console.log(`Server running on http://localhost:${process.env.SERVER_PORT}`);
 });
