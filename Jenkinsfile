@@ -1,48 +1,79 @@
-pipeline{
+pipeline {
     agent any
     tools {
-        ansible 'ansible'
-        terraform 'terraform'
+        ansible 'Ansible'
+        terraform 'Terraform'
     }
 
     environment {
-        PATH=sh(script:"echo $PATH:/usr/local/bin", returnStdout:true).trim()
+        PATH = "/usr/local/bin:${env.PATH}"
         AWS_REGION = "us-east-1"
-        AWS_ACCOUNT_ID=sh(script:'export PATH="$PATH:/usr/local/bin" && aws sts get-caller-identity --query Account --output text', returnStdout:true).trim()
-        ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         APP_REPO_NAME = "clarusway-repo/cw-todo-app"
+        // Définit les variables d'environnement pour les credentials AWS
+        AWS_ACCESS_KEY_ID = credentials('aws-credentials-id')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-credentials-id')
     }
 
     stages {
+        stage('Setup AWS Credentials') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        env.AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
+                        env.ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                        echo "AWS Account ID: ${AWS_ACCOUNT_ID}"
+                        echo "ECR Registry: ${ECR_REGISTRY}"
+                    }
+                }
+            }
+        }
+
+        stage('Checkout Code') {
+            steps {
+                echo 'Cloning repository...'
+                git url: 'https://github.com/YanisDevops/JenkinsServer-3Nodes-TierAPP.git', branch: 'main'
+            }
+        }
+
         stage('Create Infrastructure for the App') {
             steps {
-                echo 'Creating Infrastructure for the App on AWS Cloud'
-                sh 'terraform init'
-                sh 'terraform apply --auto-approve'
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        echo 'Creating Infrastructure for the App on AWS Cloud'
+                        sh 'terraform init'
+                        sh 'terraform apply --auto-approve'
+                    }
+                }
             }
         }
 
         stage('Create ECR Repo') {
             steps {
-                echo 'Creating ECR Repo for App'
-                sh '''
-                aws ecr describe-repositories --region ${AWS_REGION} --repository-name ${APP_REPO_NAME} || \
-                aws ecr create-repository \
-                  --repository-name ${APP_REPO_NAME} \
-                  --image-scanning-configuration scanOnPush=false \
-                  --image-tag-mutability MUTABLE \
-                  --region ${AWS_REGION}
-                '''
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        echo 'Creating ECR Repo for App'
+                        sh '''
+                        aws ecr describe-repositories --region ${AWS_REGION} --repository-name ${APP_REPO_NAME} > /dev/null 2>&1 || \
+                        aws ecr create-repository \
+                          --repository-name ${APP_REPO_NAME} \
+                          --image-scanning-configuration scanOnPush=false \
+                          --image-tag-mutability MUTABLE \
+                          --region ${AWS_REGION}
+                        '''
+                    }
+                }
             }
-        }
+        }  
+        
         stage('Build App Docker Image') {
             steps {
-                echo 'Building App Image'
                 script {
-                    env.NODE_IP = sh(script: 'terraform output -raw node_public_ip', returnStdout:true).trim()
-                    env.DB_HOST = sh(script: 'terraform output -raw postgre_private_ip', returnStdout:true).trim()
-                    env.DB_NAME = sh(script: 'aws --region=us-east-1 ssm get-parameters --names "db_name" --query "Parameters[*].{Value:Value}" --output text', returnStdout:true).trim()
-                    env.DB_PASSWORD = sh(script: 'aws --region=us-east-1 ssm get-parameters --names "db_password" --query "Parameters[*].{Value:Value}" --output text', returnStdout:true).trim()
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        env.NODE_IP = sh(script: 'terraform output -raw node_public_ip', returnStdout: true).trim()
+                        env.DB_HOST = sh(script: 'terraform output -raw postgre_private_ip', returnStdout: true).trim()
+                        env.DB_NAME = sh(script: 'aws --region=${AWS_REGION} ssm get-parameters --names "db_name" --query "Parameters[*].{Value:Value}" --output text', returnStdout: true).trim()
+                        env.DB_PASSWORD = sh(script: 'aws --region=${AWS_REGION} ssm get-parameters --names "db_password" --query "Parameters[*].{Value:Value}" --output text', returnStdout: true).trim()
+                    }
                 }
                 sh 'echo ${DB_HOST}'
                 sh 'echo ${NODE_IP}'
@@ -61,34 +92,65 @@ pipeline{
 
         stage('Push Image to ECR Repo') {
             steps {
-                echo 'Pushing App Image to ECR Repo'
-                sh 'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
-                sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:postgre"'
-                sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:nodejs"'
-                sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:react"'
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                        echo 'Pushing App Image to ECR Repo'
+                        sh 'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
+                        sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:postgre"'
+                        sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:nodejs"'
+                        sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:react"'
+                    }
+                }
             }
         }
-
-        stage('wait the instance') {
+        
+        stage('Wait for the Instance') {
             steps {
-                script {
-                    echo 'Waiting for the instance'
-                    id = sh(script: 'aws ec2 describe-instances --filters Name=tag-value,Values=ansible_postgresql Name=instance-state-name,Values=running --query Reservations[*].Instances[*].[InstanceId] --output text',  returnStdout:true).trim()
-                    sh 'aws ec2 wait instance-status-ok --instance-ids $id'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id']]) {
+                    script {
+                        echo 'Waiting for the instance'
+                        id = sh(script: 'aws ec2 describe-instances --filters Name=tag-value,Values=ansible_postgresql Name=instance-state-name,Values=running --query Reservations[*].Instances[*].[InstanceId] --output text', returnStdout:true).trim()
+                        sh 'aws ec2 wait instance-status-ok --instance-ids $id'
+                    }
                 }
             }
         }
 
         stage('Deploy the App') {
             steps {
-                echo 'Deploy the App'
+                echo 'Deploying the App'
                 sh 'ls -l'
                 sh 'ansible --version'
-                sh 'ansible-inventory --graph'
-                ansiblePlaybook credentialsId: 'key_pair_name', disableHostKeyChecking: true, installation: 'ansible', inventory: 'inventory_aws_ec2.yml', playbook: 'docker_project.yml'
-             }
+                
+                // Utilisation des credentials AWS et SSH
+                withCredentials([
+                    // Credentials AWS pour l'authentification avec AWS
+                    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials-id'],
+                    
+                    // Credentials SSH pour l'accès aux instances
+                    sshUserPrivateKey(credentialsId: 'key_pair_name', keyFileVariable: 'SSH_KEY')
+                ]) {
+                    sh '''
+                        # Exporte les variables d'environnement AWS
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        
+                        # Vérifie la clé SSH temporaire
+                        ls -l $SSH_KEY
+                        
+                        # Vérifie l'inventaire Ansible
+                        ansible-inventory -i inventory_aws_ec2.yml --graph
+                        
+                        # Teste la connectivité avec Ansible
+                        ansible all -i inventory_aws_ec2.yml -m ping --private-key $SSH_KEY -u ec2-user
+                        
+                        # Exécute le playbook Ansible
+                        ansible-playbook -i inventory_aws_ec2.yml docker_project.yml --private-key $SSH_KEY -u ec2-user
+                    '''
+                }
+            }
         }
-
+        
         stage('Destroy the infrastructure'){
             steps{
                 timeout(time:5, unit:'DAYS'){
@@ -112,21 +174,6 @@ pipeline{
             echo 'Deleting all local images'
             sh 'docker image prune -af'
         }
-
-
-        failure {
-
-            echo 'Delete the Image Repository on ECR due to the Failure'
-            sh """
-                aws ecr delete-repository \
-                  --repository-name ${APP_REPO_NAME} \
-                  --region ${AWS_REGION}\
-                  --force
-                """
-            echo 'Deleting Terraform Stack due to the Failure'
-                sh 'terraform destroy --auto-approve'
-        }
-    }   
-
-
+    }
+    
 }
