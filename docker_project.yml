@@ -83,7 +83,7 @@
   become: true
   vars:
     container_name: yanis_postgre
-    image_name: 590183937685.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:postgre
+    image_name: xxxxxxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:postgre
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
@@ -113,7 +113,7 @@
   become: true
   vars:
     container_name: yanis_nodejs
-    image_name: 590183937685.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:nodejs
+    image_name: xxxxxxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:nodejs
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
@@ -139,7 +139,7 @@
   become: true
   vars:
     container_name: yanis_react
-    image_name: 590183937685.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:react
+    image_name: xxxxxxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com/clarusway-repo/cw-todo-app:react
   tasks:
     - name: remove postgre container
       community.docker.docker_container:
